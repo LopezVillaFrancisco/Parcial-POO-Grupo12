@@ -18,6 +18,7 @@ public abstract class Alquiler {
     private static int contadorId = 0;
 
     private int id;
+    private Cliente cliente;
     private Date fechaSolicitud;
     private Date fechaEvento;
     private int cantidadDias;
@@ -31,14 +32,15 @@ public abstract class Alquiler {
 
     protected Alquiler() {
         this.id = ++contadorId;
+        this.fechaSolicitud = new Date();
         this.estado = EstadoAlquiler.INGRESADO;
         this.detalles = new ArrayList<>();
         this.pagos = new ArrayList<>();
     }
 
-    protected Alquiler(Date fechaSolicitud, Date fechaEvento, int cantidadDias) {
+    protected Alquiler(Cliente cliente, Date fechaEvento, int cantidadDias) {
         this();
-        this.fechaSolicitud = fechaSolicitud;
+        this.cliente = cliente;
         this.fechaEvento = fechaEvento;
         this.cantidadDias = cantidadDias;
     }
@@ -132,6 +134,14 @@ public abstract class Alquiler {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
     }
 
     public Date getFechaSolicitud() {

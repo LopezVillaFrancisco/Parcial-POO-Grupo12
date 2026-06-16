@@ -3,19 +3,21 @@ package org.examen.model;
 import java.util.Date;
 
 /**
- * Alquiler para evento corporativo: aplica un recargo (por defecto 10%).
- * El porcentaje es parametrizable de manera general mediante un valor estatico.
+ * Alquiler para evento corporativo: aplica el recargo recibido por constructor
+ * (segun el diagrama), parametrizable de manera general desde el controlador
+ * (por defecto 10%).
  */
 public class AlquilerCorporativo extends Alquiler {
 
-    private static double recargo = 10;
+    private double recargo;
 
     public AlquilerCorporativo() {
         super();
     }
 
-    public AlquilerCorporativo(Date fechaSolicitud, Date fechaEvento, int cantidadDias) {
-        super(fechaSolicitud, fechaEvento, cantidadDias);
+    public AlquilerCorporativo(Cliente cliente, Date fechaEvento, int cantidadDias, double recargo) {
+        super(cliente, fechaEvento, cantidadDias);
+        this.recargo = recargo;
     }
 
     @Override
@@ -23,11 +25,11 @@ public class AlquilerCorporativo extends Alquiler {
         return recargo;
     }
 
-    public static double getRecargo() {
+    public double getRecargo() {
         return recargo;
     }
 
-    public static void setRecargo(double nuevoRecargo) {
-        recargo = nuevoRecargo;
+    public void setRecargo(double recargo) {
+        this.recargo = recargo;
     }
 }

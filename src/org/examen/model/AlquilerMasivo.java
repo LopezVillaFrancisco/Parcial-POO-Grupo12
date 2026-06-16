@@ -3,19 +3,21 @@ package org.examen.model;
 import java.util.Date;
 
 /**
- * Alquiler para evento masivo: aplica un recargo (por defecto 20%).
- * El porcentaje es parametrizable de manera general mediante un valor estatico.
+ * Alquiler para evento masivo: aplica el recargo recibido por constructor
+ * (segun el diagrama), parametrizable de manera general desde el controlador
+ * (por defecto 20%).
  */
 public class AlquilerMasivo extends Alquiler {
 
-    private static double recargo = 20;
+    private double recargo;
 
     public AlquilerMasivo() {
         super();
     }
 
-    public AlquilerMasivo(Date fechaSolicitud, Date fechaEvento, int cantidadDias) {
-        super(fechaSolicitud, fechaEvento, cantidadDias);
+    public AlquilerMasivo(Cliente cliente, Date fechaEvento, int cantidadDias, double recargo) {
+        super(cliente, fechaEvento, cantidadDias);
+        this.recargo = recargo;
     }
 
     @Override
@@ -23,11 +25,11 @@ public class AlquilerMasivo extends Alquiler {
         return recargo;
     }
 
-    public static double getRecargo() {
+    public double getRecargo() {
         return recargo;
     }
 
-    public static void setRecargo(double nuevoRecargo) {
-        recargo = nuevoRecargo;
+    public void setRecargo(double recargo) {
+        this.recargo = recargo;
     }
 }

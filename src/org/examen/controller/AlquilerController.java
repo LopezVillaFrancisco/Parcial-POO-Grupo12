@@ -82,12 +82,21 @@ public class AlquilerController {
             }
             if (!equipo.estaDisponible(itemDTO.getCantidad())) {
                 throw new IllegalStateException("El equipo " + equipo.getCodigo()
-                        + " no tiene stock disponible para la cantidad solicitada.");
+                        + " no esta disponible o no posee stock suficiente.");
+            }
+            // Disponibilidad real para el periodo solicitado: stock total menos lo
+            // comprometido por otros alquileres que se solapan en fechas, menos lo
+            // ya pedido en este mismo alquiler.
+            int yaSolicitado = alquiler.cantidadReservadaDeEquipo(equipo.getCodigo());
+            int disponiblePeriodo = cantidadDisponibleEnPeriodo(
+                    equipo, dto.getFechaEvento(), dto.getCantidadDias()) - yaSolicitado;
+            if (disponiblePeriodo < itemDTO.getCantidad()) {
+                throw new IllegalStateException("El equipo " + equipo.getCodigo()
+                        + " no tiene stock disponible para el periodo solicitado.");
             }
             DetalleAlquiler detalle = new DetalleAlquiler(
                     itemDTO.getCantidad(), equipo.getValorDiario(), equipo);
             alquiler.agregarDetalle(detalle);
-            equipo.reservarStock(itemDTO.getCantidad());
         }
 
         alquiler.setEstado(EstadoAlquiler.INGRESADO);
@@ -143,10 +152,8 @@ public class AlquilerController {
             throw new IllegalArgumentException("No existe un alquiler con el id " + idAlquiler);
         }
 
-        // Liberar el stock reservado por cada detalle.
-        for (DetalleAlquiler detalle : alquiler.getDetalles()) {
-            detalle.obtenerEquipo().liberarStock(detalle.obtenerCantidad());
-        }
+        // Al cancelar, el alquiler deja de ocupar stock: la disponibilidad por
+        // periodo se recalcula automaticamente a partir de los alquileres activos.
 
         int horasAnticipacion = alquiler.calcularHorasAnticipacion(fechaCancelacion);
         if (horasAnticipacion > HORAS_MINIMAS_REINTEGRO && alquiler.getCliente() != null) {
@@ -176,12 +183,8 @@ public class AlquilerController {
 
         Cliente cliente = alquiler.getCliente();
 
-        // Recorrer detalles para controlar devolucion y liberar stock.
-        for (DetalleAlquiler detalle : alquiler.getDetalles()) {
-            Equipo equipo = detalle.obtenerEquipo();
-            int cantidad = detalle.obtenerCantidad();
-            equipo.liberarStock(cantidad);
-        }
+        // Al finalizar, los equipos se devuelven y el alquiler deja de ocupar
+        // stock para periodos futuros (la disponibilidad se recalcula sola).
 
         double porcentajeDescuento = cliente != null
                 ? cliente.obtenerDescuentoVigente(alquiler.getFechaEvento())
@@ -244,6 +247,31 @@ public class AlquilerController {
                 ? alquiler.getCliente().obtenerDescuentoVigente(alquiler.getFechaEvento())
                 : 0;
         return recargo - descuento;
+    }
+
+    /**
+     * Cantidad del equipo indicado comprometida por los alquileres activos cuyo
+     * periodo se solapa con el rango [fechaEvento, fechaEvento + cantidadDias].
+     */
+    public int cantidadComprometida(String codigoEquipo, Date fechaEvento, int cantidadDias) {
+        Date desde = fechaEvento;
+        Date hasta = calcularFechaFin(fechaEvento, cantidadDias);
+        int comprometida = 0;
+        for (Alquiler alquiler : listaAlquileres) {
+            if (alquiler.ocupaStock() && alquiler.seSolapaConPeriodo(desde, hasta)) {
+                comprometida += alquiler.cantidadReservadaDeEquipo(codigoEquipo);
+            }
+        }
+        return comprometida;
+    }
+
+    /**
+     * Stock del equipo realmente disponible para el periodo solicitado: stock
+     * total menos lo comprometido por los alquileres activos que se solapan.
+     */
+    public int cantidadDisponibleEnPeriodo(Equipo equipo, Date fechaEvento, int cantidadDias) {
+        int comprometida = cantidadComprometida(equipo.getCodigo(), fechaEvento, cantidadDias);
+        return equipo.getStockDisponible() - comprometida;
     }
 
     /**
@@ -326,6 +354,13 @@ public class AlquilerController {
             return "MASIVO";
         }
         return null;
+    }
+
+    private Date calcularFechaFin(Date inicio, int cantidadDias) {
+        if (inicio == null) {
+            return null;
+        }
+        return new Date(inicio.getTime() + (long) cantidadDias * 24L * 60L * 60L * 1000L);
     }
 
     private boolean estaEnRango(Date fecha, Date desde, Date hasta) {

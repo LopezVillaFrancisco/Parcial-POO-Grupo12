@@ -41,14 +41,6 @@ public class Equipo {
         return this.estado == EstadoEquipo.DISPONIBLE && this.stockDisponible >= cantidad;
     }
 
-    public void reservarStock(int cantidad) {
-        this.stockDisponible -= cantidad;
-    }
-
-    public void liberarStock(int cantidad) {
-        this.stockDisponible += cantidad;
-    }
-
     public void cambiarEstado(EstadoEquipo estadoNuevo) {
         this.estado = estadoNuevo;
     }

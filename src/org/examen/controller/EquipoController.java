@@ -63,14 +63,7 @@ public class EquipoController {
         TipoEquipo tipo = TipoEquipo.valueOf(tipoEvento);
         List<EquipoDTO> disponibles = new ArrayList<>();
         for (Equipo equipo : listaEquipos) {
-            if (equipo.getTipoEquipo() != tipo || !equipo.estaDisponible(1)) {
-                continue;
-            }
-            // Disponibilidad para la fecha y el periodo solicitados, descontando
-            // los alquileres activos que se solapan con ese rango.
-            int disponiblePeriodo = AlquilerController.getInstance()
-                    .cantidadDisponibleEnPeriodo(equipo, fechaEvento, cantidadDias);
-            if (disponiblePeriodo > 0) {
+            if (equipo.getTipoEquipo() == tipo && equipo.estaDisponible(1)) {
                 disponibles.add(toDTO(equipo));
             }
         }

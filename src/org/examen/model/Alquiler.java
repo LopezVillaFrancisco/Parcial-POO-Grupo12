@@ -128,54 +128,6 @@ public abstract class Alquiler {
         return (int) (diferenciaMillis / (1000 * 60 * 60));
     }
 
-    /**
-     * Fecha de fin del periodo del alquiler (fecha del evento mas la cantidad
-     * de dias contratados).
-     */
-    public Date getFechaFin() {
-        if (fechaEvento == null) {
-            return null;
-        }
-        long fin = fechaEvento.getTime() + (long) cantidadDias * 24L * 60L * 60L * 1000L;
-        return new Date(fin);
-    }
-
-    /**
-     * Indica si el alquiler mantiene equipos comprometidos, es decir, si no fue
-     * cancelado ni finalizado.
-     */
-    public boolean ocupaStock() {
-        return estado == EstadoAlquiler.INGRESADO
-                || estado == EstadoAlquiler.CONFIRMADO
-                || estado == EstadoAlquiler.EN_PREPARACION
-                || estado == EstadoAlquiler.ENTREGADO;
-    }
-
-    /**
-     * Indica si el periodo del alquiler se solapa con el rango [desde, hasta].
-     */
-    public boolean seSolapaConPeriodo(Date desde, Date hasta) {
-        Date fin = getFechaFin();
-        if (fechaEvento == null || fin == null || desde == null || hasta == null) {
-            return false;
-        }
-        return !fechaEvento.after(hasta) && !fin.before(desde);
-    }
-
-    /**
-     * Cantidad total del equipo indicado reservada por este alquiler.
-     */
-    public int cantidadReservadaDeEquipo(String codigoEquipo) {
-        int total = 0;
-        for (DetalleAlquiler detalle : detalles) {
-            if (detalle.getEquipo() != null
-                    && codigoEquipo.equals(detalle.getEquipo().getCodigo())) {
-                total += detalle.getCantidad();
-            }
-        }
-        return total;
-    }
-
     public int getId() {
         return id;
     }
